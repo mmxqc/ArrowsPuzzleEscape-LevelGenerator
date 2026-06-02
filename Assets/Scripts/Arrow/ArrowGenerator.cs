@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,9 +19,9 @@ public class ArrowGenerator : MonoBehaviour
     private List<Arrow> arrowList = new List<Arrow>();
 
     [Header("Generation Settings")]
-    [UnityEngine.Range(0, 5)] public int arrowMinLength = 5;
-    [UnityEngine.Range(0, 20)] public int arrowMaxLength = 10;
-    [UnityEngine.Range(0f, 1f)] public float arrowGenerationChangeDirectionChance = 0.3f;
+    public int arrowMinLength = 5;
+    public int arrowMaxLength = 10;
+    public float arrowGenerationChangeDirectionChance = 0.3f;
 
     private void OnValidate()
     {
@@ -522,5 +521,32 @@ public class ArrowGenerator : MonoBehaviour
     public List<Arrow> GetArrayList()
     {
         return arrowList;
+    }
+
+    /// <summary>
+    /// Clears existing arrows and regenerates all. Can be called from Editor.
+    /// </summary>
+    public void GenerateAll()
+    {
+        // Clear existing visual arrows
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            DestroyImmediate(transform.GetChild(i).gameObject);
+        }
+        arrowList.Clear();
+
+        // Clear the grid
+        Tile[,] gridList = LevelGenerator.Instance.GetGridList();
+        for (int x = 0; x < gridList.GetLength(0); x++)
+            for (int y = 0; y < gridList.GetLength(1); y++)
+                gridList[x, y].type = TileType.Empty;
+
+        // Regenerate
+        bool allOccupied = false;
+        while (!allOccupied)
+        {
+            GenerateMainArrow();
+            allOccupied = LevelGenerator.Instance.GetGridList().Cast<Tile>().All(tile => tile.type == TileType.Occupy);
+        }
     }
 }

@@ -416,8 +416,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelGenerator
   tilePrefab: {fileID: 3700191496547595294, guid: 04173715f4b172045a0280dc82f73077, type: 3}
-  width: 9
-  height: 9
+  levelWidth: 50
+  levelHeight: 50
 --- !u!1 &1068553150
 GameObject:
   m_ObjectHideFlags: 0

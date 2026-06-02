@@ -1,11 +1,19 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
 {
-    public static LevelGenerator Instance { get; private set; }
+    private static LevelGenerator _instance;
+    public static LevelGenerator Instance
+    {
+        get
+        {
+            if (_instance == null)
+                _instance = FindAnyObjectByType<LevelGenerator>();
+            return _instance;
+        }
+    }
 
     [Header("Grid Settings")]
     public GameObject tilePrefab;
@@ -18,7 +26,7 @@ public class LevelGenerator : MonoBehaviour
 
     private void Awake()
     {
-        Instance = this;
+        _instance = this;
     }
 
     void Start()

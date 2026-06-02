@@ -1,11 +1,19 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 
 public class ArrowGenerator : MonoBehaviour
 {
-    public static ArrowGenerator Instance { get; private set; }
+    private static ArrowGenerator _instance;
+    public static ArrowGenerator Instance
+    {
+        get
+        {
+            if (_instance == null)
+                _instance = FindAnyObjectByType<ArrowGenerator>();
+            return _instance;
+        }
+    }
 
     [Header("Arrow Prefabs")]
     public List<GameObject> arrowPrefabList;
@@ -23,6 +31,9 @@ public class ArrowGenerator : MonoBehaviour
     public int arrowMaxLength = 10;
     public float arrowGenerationChangeDirectionChance = 0.3f;
 
+    // When true (editor mode), skip prefab instantiation to avoid errors
+    public bool skipVisualCreation = false;
+
     private void OnValidate()
     {
         if (arrowMinLength > arrowMaxLength)
@@ -31,7 +42,7 @@ public class ArrowGenerator : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        _instance = this;
 
         arrowHeadPrefabIndexMap = new Dictionary<(ArrowDirection, Vector2Int), int>
         {
@@ -283,7 +294,7 @@ public class ArrowGenerator : MonoBehaviour
         }
 
         // Add arrow to list
-        CreateArrowVisual(arrow);
+        if (!skipVisualCreation) CreateArrowVisual(arrow);
         arrowList.Add(arrow);
     }
 
@@ -528,10 +539,11 @@ public class ArrowGenerator : MonoBehaviour
     /// </summary>
     public void GenerateAll()
     {
-        // Clear existing visual arrows
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        // Clear existing visual arrows (only in play mode)
+        if (!skipVisualCreation)
         {
-            DestroyImmediate(transform.GetChild(i).gameObject);
+            for (int i = transform.childCount - 1; i >= 0; i--)
+                DestroyImmediate(transform.GetChild(i).gameObject);
         }
         arrowList.Clear();
 
@@ -543,10 +555,16 @@ public class ArrowGenerator : MonoBehaviour
 
         // Regenerate
         bool allOccupied = false;
-        while (!allOccupied)
+        int safety = 10000;
+        while (!allOccupied && safety-- > 0)
         {
             GenerateMainArrow();
             allOccupied = LevelGenerator.Instance.GetGridList().Cast<Tile>().All(tile => tile.type == TileType.Occupy);
         }
+
+        if (safety <= 0)
+            Debug.LogWarning("GenerateAll reached safety limit!");
+        else
+            Debug.Log($"GenerateAll finished: {arrowList.Count} arrows");
     }
 }

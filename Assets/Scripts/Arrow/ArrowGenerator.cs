@@ -547,11 +547,13 @@ public class ArrowGenerator : MonoBehaviour
         }
         arrowList.Clear();
 
-        // Clear the grid (create if not initialized — editor mode)
+        // Get or create grid at the correct size
         Tile[,] gridList = LevelGenerator.Instance.GetGridList();
-        if (gridList == null)
+        int targetW = LevelGenerator.Instance.levelWidth;
+        int targetH = LevelGenerator.Instance.levelHeight;
+        if (gridList == null || gridList.GetLength(0) != targetW || gridList.GetLength(1) != targetH)
         {
-            LevelGenerator.Instance.GenerateLevel();
+            LevelGenerator.Instance.RebuildGrid();
             gridList = LevelGenerator.Instance.GetGridList();
         }
         for (int x = 0; x < gridList.GetLength(0); x++)

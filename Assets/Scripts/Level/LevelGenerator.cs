@@ -34,7 +34,7 @@ public class LevelGenerator : MonoBehaviour
         GenerateLevel();
     }
 
-    private void GenerateLevel()
+    public void GenerateLevel()
     {
         gridList = new Tile[levelWidth, levelHeight];
 

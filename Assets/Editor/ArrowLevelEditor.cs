@@ -14,6 +14,10 @@ public class ArrowLevelEditor : EditorWindow
     private int arrowMaxLength = 10;
     private float changeDirectionChance = 0.3f;
 
+    // 预览开关
+    private bool showArrows = true;
+    private bool showEmptyDots = true;
+
     // 生成结果
     private class SnakeData
     {
@@ -88,10 +92,16 @@ public class ArrowLevelEditor : EditorWindow
         EditorGUILayout.BeginVertical(GUILayout.Width(position.width * 0.55f));
         GUILayout.Label("关卡预览", EditorStyles.boldLabel);
 
+        // 工具栏
+        EditorGUILayout.BeginHorizontal();
+        showArrows = GUILayout.Toggle(showArrows, "箭头显隐", EditorStyles.miniButton, GUILayout.Width(80));
+        showEmptyDots = GUILayout.Toggle(showEmptyDots, "空点显隐", EditorStyles.miniButton, GUILayout.Width(80));
+        GUILayout.FlexibleSpace();
         if (hasResult)
-        {
-            GUILayout.Label($"共 {generatedSnakes.Count} 条蛇", EditorStyles.miniLabel);
-        }
+            GUILayout.Label($"{generatedSnakes.Count} 条蛇", EditorStyles.miniLabel);
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.Space();
 
         var previewRect = EditorGUILayout.GetControlRect(GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 
@@ -119,8 +129,31 @@ public class ArrowLevelEditor : EditorWindow
         for (int x = 0; x <= levelWidth; x++)
             EditorGUI.DrawRect(new Rect(ox + x * cellSize, oy, 1, gridH), new Color(0.12f, 0.12f, 0.12f));
 
+        // 空点显隐
+        if (hasResult && showEmptyDots)
+        {
+            var occupied = new HashSet<Vector2Int>();
+            foreach (var snake in generatedSnakes)
+                foreach (var p in snake.path)
+                    occupied.Add(p);
+
+            float dotR = cellSize * 0.12f;
+            for (int y = 0; y < levelHeight; y++)
+            {
+                for (int x = 0; x < levelWidth; x++)
+                {
+                    if (!occupied.Contains(new Vector2Int(x, y)))
+                    {
+                        float dx = ox + x * cellSize + cellSize / 2 - dotR;
+                        float dy = oy + y * cellSize + cellSize / 2 - dotR;
+                        EditorGUI.DrawRect(new Rect(dx, dy, dotR * 2, dotR * 2), new Color(0.8f, 0.8f, 0.8f));
+                    }
+                }
+            }
+        }
+
         // 画蛇
-        if (hasResult)
+        if (hasResult && showArrows)
         {
             for (int si = 0; si < generatedSnakes.Count; si++)
             {

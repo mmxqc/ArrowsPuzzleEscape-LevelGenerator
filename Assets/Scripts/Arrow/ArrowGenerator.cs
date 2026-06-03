@@ -85,14 +85,53 @@ public class ArrowGenerator : MonoBehaviour
         };
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        Debug.Log($"[ArrowGenerator] Start — arrowList.Count = {arrowList.Count}");
+
+        if (arrowList.Count > 0)
+        {
+            Debug.Log("[ArrowGenerator] Found pre-existing arrows from editor, applying...");
+            StartCoroutine(ApplyEditorArrows());
+            return;
+        }
+
+        Debug.Log("[ArrowGenerator] No pre-existing arrows, auto-generating...");
+        StartCoroutine(AutoGenerateWhenReady());
+    }
+
+    System.Collections.IEnumerator ApplyEditorArrows()
+    {
+        // Wait until LevelGenerator has created the grid
+        Tile[,] gridList = null;
+        while (gridList == null)
+        {
+            gridList = LevelGenerator.Instance.GetGridList();
+            yield return null;
+        }
+
+        foreach (var a in arrowList)
+            foreach (var p in a.path)
+                if (p.x < gridList.GetLength(0) && p.y < gridList.GetLength(1))
+                    gridList[p.x, p.y].type = TileType.Occupy;
+
+        foreach (var a in arrowList)
+            CreateArrowVisual(a);
+    }
+
+    System.Collections.IEnumerator AutoGenerateWhenReady()
+    {
+        Tile[,] gridList = null;
+        while (gridList == null)
+        {
+            gridList = LevelGenerator.Instance.GetGridList();
+            yield return null;
+        }
+
         bool allOccupied = false;
-        while(!allOccupied)
+        while (!allOccupied)
         {
             GenerateMainArrow();
-
             allOccupied = LevelGenerator.Instance.GetGridList().Cast<Tile>().All(tile => tile.type == TileType.Occupy);
         }
     }
@@ -537,6 +576,13 @@ public class ArrowGenerator : MonoBehaviour
     /// <summary>
     /// Clears existing arrows and regenerates all. Can be called from Editor.
     /// </summary>
+    public void RebuildVisuals()
+    {
+        for (int i = transform.childCount - 1; i >= 0; i--)
+            DestroyImmediate(transform.GetChild(i).gameObject);
+        foreach (var a in arrowList) CreateArrowVisual(a);
+    }
+
     public void GenerateAll()
     {
         // Clear existing visual arrows (only in play mode)
